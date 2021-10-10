@@ -5,7 +5,7 @@ import json
 
 
 
-class Kerio(object):
+class VPN_connection(object):
 	
 	def __init__(self):
 		try:
@@ -17,13 +17,12 @@ class Kerio(object):
 			self.params = dict()
 			self.params.update(
 			CONNECTION_NAME = input('Enter VPN-connection name: '),
-			LOGIN = input('Enter Kerio login: '),
+			LOGIN = input('Enter VPN login: '),
 			PASSWORD = input('Input password: '),
-			KERIO_GATE = input('Enter Kerio gate (empty == 172.27.21.1)'),
+			VPN_GATE = input('Enter VPN gate'),
 			TIMEOUT = 60, 
 			DEBUG = True)
-			if not self.params['KERIO_GATE']:
-				self.params['KERIO_GATE'] = '172.27.21.1'
+		
 			with open('config.cfg','w') as f:
 				f.write(json.dumps(self.params, sort_keys=True, indent=4))
 
@@ -39,38 +38,38 @@ class Kerio(object):
 				print('Problems with internet!')
 			return False
 
-	#pinging kerio host
-	def checking_kerio(self): 
-		answer = os.system('ping '+ self.params['KERIO_GATE'])
+	#pinging VPN host
+	def checking_VPN(self): 
+		answer = os.system('ping '+ self.params['VPN_GATE'])
 		if self.params['DEBUG']:
 			print('Pinging status:',answer) #if 1 no connection
 		return answer
 	
-	#connecting to kerio-vpn
-	def connect_kerio(self):
+	#connecting to vpn
+	def connect_vpn(self):
 		if self.params['DEBUG']:
 			print('Connecting to {} with login {}.'.format(self.params['CONNECTION_NAME'], self.params['LOGIN']))
 		else:
-			print('Connecting Kerio')
+			print('Connecting VPN')
 		os.system('rasdial.exe {} {} {}'.format(self.params['CONNECTION_NAME'], self.params['LOGIN'], self.params['PASSWORD']))
 
 def main():
-	kerio = Kerio()
+	vpn = VPN_connection()
 	while True:
-		if kerio.internet_connection():	#есть ли интернет
-			kerio.connect_kerio() #цепляем керио
+		if VPN_connection.internet_connection():	#есть ли интернет
+			VPN_connection.connect_vpn() #цепляем керио
 			while True:
-				if not kerio.checking_kerio(): #пинг шлюза возвращает 0, если есть пинги и 1 если нет 
+				if not VPN_connection.checking_VPN(): #пинг шлюза возвращает 0, если есть пинги и 1 если нет 
 					os.system('cls')
-					print('Kerio connected!')
-					time.sleep(kerio.params['TIMEOUT'])
+					print('VPN connected!')
+					time.sleep(VPN_connection.params['TIMEOUT'])
 				else: #если пингов нет, то чекаем интернет соединение
-					if kerio.internet_connection(message=False):# если интернета нет, то ломаем второй бесконечный цикл
-						kerio.connect_kerio()
+					if VPN_connection.internet_connection(message=False):# если интернета нет, то ломаем второй бесконечный цикл
+						VPN_connection.connect_vpn()
 					else:
 						break #попадаем на первый 
 		else:
-			time.sleep(kerio.params['TIMEOUT'])
+			time.sleep(VPN_connection.params['TIMEOUT'])
 			continue
 
 
